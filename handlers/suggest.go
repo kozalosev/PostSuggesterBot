@@ -23,12 +23,13 @@ const (
 	no      = "👎"
 	approve = "Approve"
 	ban     = "Ban"
+	revoke  = "Revoke"
 
 	anon = "visibility.anon"
 	pub  = "visibility.public"
 
 	approveMessageTextTr = "messages.approve"
-	refuseMessageTextTr  = "messages.revoke"
+	revokeMessageTextTr  = "messages.revoke"
 	refusedMessageTextTr = "messages.refused"
 	bannedMessageTextTr  = "messages.banned"
 )
@@ -124,9 +125,9 @@ func (h *SuggestHandler) formAction(reqenv *base.RequestEnv, msg *tgbotapi.Messa
 		h.replyWithApprovalButtons(forward, msg.From.ID, messageID, reqenv.Lang)
 	}
 
-	refuseBtnData := fmt.Sprintf("revoke:%d:%d", msg.Chat.ID, msg.MessageID)
-	h.appEnv.Bot.ReplyWithInlineKeyboard(msg, reqenv.Lang.Tr(refuseMessageTextTr), []tgbotapi.InlineKeyboardButton{
-		tgbotapi.NewInlineKeyboardButtonData(reqenv.Lang.Tr("Revoke"), refuseBtnData),
+	revokeBtnData := fmt.Sprintf("revoke:%d:%d", msg.Chat.ID, msg.MessageID)
+	h.appEnv.Bot.ReplyWithInlineKeyboard(msg, reqenv.Lang.Tr(revokeMessageTextTr), []tgbotapi.InlineKeyboardButton{
+		tgbotapi.NewInlineKeyboardButtonData(reqenv.Lang.Tr(revoke), revokeBtnData),
 	})
 }
 
@@ -139,8 +140,8 @@ func (h *SuggestHandler) replyWithApprovalButtons(c tgbotapi.Chattable, authorUI
 		approveCallbackData := fmt.Sprintf("approve:%d:%d", authorUID, messageID)
 		banCallbackData := fmt.Sprintf("ban:%d", authorUID)
 		h.appEnv.Bot.ReplyWithInlineKeyboard(&sentMessage, lc.Tr(approveMessageTextTr), []tgbotapi.InlineKeyboardButton{
-			{Text: approve, CallbackData: &approveCallbackData},
-			{Text: ban, CallbackData: &banCallbackData},
+			{Text: lc.Tr(approve), CallbackData: &approveCallbackData},
+			{Text: lc.Tr(ban), CallbackData: &banCallbackData},
 		})
 	} else {
 		log.WithField(logconst.FieldHandler, "SuggestHandler").

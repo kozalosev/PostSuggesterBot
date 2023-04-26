@@ -66,6 +66,10 @@ func TestUserService_ChangeLanguage(t *testing.T) {
 }
 
 func TestUserService_Promote(t *testing.T) {
+	clearDatabase(t)
+	assert.Error(t, userService.Promote(TestUID, dto.Author))
+	createTestUser(t)
+
 	_, opts := userService.FetchUserOptions(TestUID, "")
 	assert.IsType(t, &dto.UserOptions{}, opts)
 	assert.Equal(t, dto.UsualUser, opts.(*dto.UserOptions).Role)

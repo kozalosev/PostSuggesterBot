@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/kozalosev/PostSuggesterBot/db/dto"
 	"github.com/kozalosev/PostSuggesterBot/db/repo"
@@ -16,6 +17,9 @@ const (
 	fieldUID              = "uid"
 	fieldRole             = "role"
 	fieldAutoAdmins       = "autoAdmins"
+
+	promoteStatusTrSuccess = "commands.promote.status.success"
+	promoteStatusTrNoOne   = "commands.promote.status.nobody"
 )
 
 type PromoteHandler struct {
@@ -84,13 +88,20 @@ func (h *PromoteHandler) formAction(reqenv *base.RequestEnv, msg *tgbotapi.Messa
 	autoAdmins := fields.FindField(fieldAutoAdmins).Data == yes
 	role := dto.UserRole(fields.FindField(fieldRole).Data.(string))
 
-	uids := h.resolveUIDs(uid, autoAdmins)
+	candidates := h.resolveCandidates(uid, resolveName(msg.From), autoAdmins)
 	log.WithField(logconst.FieldHandler, "PromoteHandler").
 		WithField(logconst.FieldMethod, "formAction").
-		Infof("I'm going to promote %v to the %s role", uids, role)
+		Infof("I'm going to promote %v to the %s role", candidates, role)
 
-	errs := funk.Map(uids, func(uid int64) error {
-		return h.userService.Promote(uid, role)
+	errs := funk.Map(candidates, func(c candidate) error {
+		if err := h.userService.Promote(c.uid, role); err == repo.NoRowsWereAffected {
+			if err := h.userService.Create(c.uid, c.name); err != nil && err != repo.NoRowsWereAffected {
+				return err
+			}
+			return h.userService.Promote(c.uid, role)
+		} else {
+			return err
+		}
 	}).([]error)
 	errs = funk.Filter(errs, func(e error) bool {
 		return e != nil
@@ -114,31 +125,45 @@ func (h *PromoteHandler) formAction(reqenv *base.RequestEnv, msg *tgbotapi.Messa
 	reply := base.NewReplier(h.appEnv, reqenv, msg)
 	if len(errs) > 0 {
 		reply(failure)
+	} else if len(candidates) > 0 {
+		names := funk.Reduce(candidates[1:], func(acc string, c candidate) string {
+			return fmt.Sprintf("%s, %s", acc, c.name)
+		}, candidates[0].name).(string)
+		h.appEnv.Bot.Reply(msg, reqenv.Lang.Tr(promoteStatusTrSuccess)+names)
 	} else {
-		reply(success)
+		reply(promoteStatusTrNoOne)
 	}
 }
 
-func (h *PromoteHandler) resolveUIDs(uid float64, autoAdmins bool) []int64 {
+func (h *PromoteHandler) resolveCandidates(uid float64, name string, autoAdmins bool) []candidate {
 	if uid == 0 && autoAdmins {
-		if ids, err := h.fetchAdminsUID(); err == nil {
+		if ids, err := h.fetchAdmins(); err == nil {
 			return ids
 		} else {
 			log.WithField(logconst.FieldHandler, "PromoteHandler").
 				WithField(logconst.FieldMethod, "formAction").
-				WithField(logconst.FieldCalledMethod, "fetchAdminsUID").
+				WithField(logconst.FieldCalledMethod, "fetchAdmins").
 				Error("unable to fetch UIDs of the chat administrators", err)
 		}
 	} else if uid > 0 {
-		return []int64{int64(uid)}
+		return []candidate{{uid: int64(uid), name: name}}
 	}
 	return nil
 }
 
-func (h *PromoteHandler) fetchAdminsUID() ([]int64, error) {
+func (h *PromoteHandler) fetchAdmins() ([]candidate, error) {
 	reqConfig := tgbotapi.ChatAdministratorsConfig{ChatConfig: tgbotapi.ChatConfig{ChatID: adminChatID}}
 	admins, err := h.appEnv.Bot.GetStandardAPI().GetChatAdministrators(reqConfig)
-	return funk.Map(admins, func(u tgbotapi.ChatMember) int64 {
-		return u.User.ID
-	}).([]int64), err
+	return funk.Map(admins, func(u tgbotapi.ChatMember) candidate {
+		return candidate{
+			uid:  u.User.ID,
+			name: resolveName(u.User),
+		}
+	}).([]candidate), err
+}
+
+// candidate for promotion to another role
+type candidate struct {
+	uid  int64
+	name string
 }

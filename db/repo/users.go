@@ -90,8 +90,12 @@ func (service *UserService) changeBanValue(uid int64, ban bool) error {
 	}
 }
 
-// Promote is the method to change the role of some user.
+// Promote is the method to change the role of some user. If there is no such user, NoRowsWereAffected is returned.
 func (service *UserService) Promote(uid int64, role dto.UserRole) error {
-	_, err := service.appEnv.Database.Exec(service.appEnv.Ctx, "UPDATE Users SET role = $2 WHERE uid = $1", uid, role)
-	return err
+	tag, err := service.appEnv.Database.Exec(service.appEnv.Ctx, "UPDATE Users SET role = $2 WHERE uid = $1", uid, role)
+	if err == nil && tag.RowsAffected() < 1 {
+		return NoRowsWereAffected
+	} else {
+		return err
+	}
 }

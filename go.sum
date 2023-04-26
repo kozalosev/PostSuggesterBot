@@ -779,6 +779,8 @@ github.com/kozalosev/goSadTgBot v0.0.0-20230425140835-4dca73040a3e h1:l51KaRfDox
 github.com/kozalosev/goSadTgBot v0.0.0-20230425140835-4dca73040a3e/go.mod h1:/0AU9BZpA2NljEBuIex1gnbibQzxJnbnc8O6n6hZkCM=
 github.com/kozalosev/goSadTgBot v0.0.0-20230426065537-d0c815264e3b h1:x9zB6kgDCSZmZdPoJ8r/mQqRNBSBCofQeaE1gdRtIME=
 github.com/kozalosev/goSadTgBot v0.0.0-20230426065537-d0c815264e3b/go.mod h1:/0AU9BZpA2NljEBuIex1gnbibQzxJnbnc8O6n6hZkCM=
+github.com/kozalosev/goSadTgBot v0.1.0 h1:dXStjfEWwrUbTlTsWnCZC+ovQ+2hurlDKENFZw3e5rE=
+github.com/kozalosev/goSadTgBot v0.1.0/go.mod h1:/0AU9BZpA2NljEBuIex1gnbibQzxJnbnc8O6n6hZkCM=
 github.com/kr/fs v0.1.0/go.mod h1:FFnZGqtBN9Gxj7eW1uZ42v5BccTP0vu6NEaFoC2HwRg=
 github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515/go.mod h1:+0opPa2QZZtGFBFZlji/RkVcI2GknAs/DXo4wKdlNEc=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=

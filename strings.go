@@ -3,6 +3,7 @@ package main
 func init() {
 	locpool.Resources["en"] = map[string]string{
 		"commands.default.message.on.command": "Unknown command",
+		"callbacks.error":                     "The state was lost 😢",
 
 		"commands.help.description": "show help",
 
@@ -15,9 +16,12 @@ func init() {
 
 		"commands.promote.fields.role":       "Choose the role below:",
 		"commands.promote.fields.autoAdmins": "Do you want to promote all administrators of the chat?",
+		"commands.promote.status.success":    "The following users has been promoted: ",
+		"commands.promote.status.nobody":     "No one to promote 😕",
 
 		"callbacks.approve.status.duplicate": "You approved this post already 😊",
 		"callbacks.approve.status.revoked":   "Unfortunately, the post was revoked 😞",
+		"callbacks.approve.status.published": "The post was published after it had been approved by the following people",
 
 		"callbacks.revoke.status.published": "I'm sorry but revocation is not possible since the post has been already published",
 
@@ -36,6 +40,7 @@ func init() {
 
 	locpool.Resources["ru"] = map[string]string{
 		"commands.default.message.on.command": "Неизвестная команда",
+		"callbacks.error":                     "Состояние формы потерялось 😢",
 
 		"commands.help.description": "показать помощь",
 
@@ -48,9 +53,12 @@ func init() {
 
 		"commands.promote.fields.role":       "Выберите роль из списка ниже:",
 		"commands.promote.fields.autoAdmins": "Вы хотите изменить роль для всех администраторов чата?",
+		"commands.promote.status.success":    "Следующие пользователи были назначены: ",
+		"commands.promote.status.nobody":     "Некого назначать 😕",
 
 		"callbacks.approve.status.duplicate": "Вы уже одобряли этот пост 😊",
 		"callbacks.approve.status.revoked":   "К сожалению, пост был отозван 😞",
+		"callbacks.approve.status.published": "Пост был опубликован после одобрения следующими людьми",
 
 		"callbacks.revoke.status.published": "Сожалею, но отозвать данный пост невозможно, так как он уже был опубликован",
 
@@ -65,13 +73,14 @@ func init() {
 
 		"failure": "Что-то пошло не так...",
 
-		"Approve": "Одобрить",
-		"Revoke":  "Отозвать",
-		"Ban":     "Заблокировать",
-		"Unban":   "Разблокировать",
+		"Approve":  "Одобрить",
+		"Approved": "Одобрено",
+		"Revoke":   "Отозвать",
+		"Ban":      "Заблокировать",
+		"Unban":    "Разблокировать",
 
-		"User":   "Обычный",
-		"Author": "Автор",
-		"Admin":  "Админ",
+		"user":   "обычный",
+		"author": "автор",
+		"admin":  "админ",
 	}
 }

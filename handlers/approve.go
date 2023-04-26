@@ -2,12 +2,14 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/kozalosev/PostSuggesterBot/db/dto"
 	"github.com/kozalosev/PostSuggesterBot/db/repo"
 	"github.com/kozalosev/goSadTgBot/base"
 	"github.com/kozalosev/goSadTgBot/logconst"
 	"github.com/kozalosev/goSadTgBot/storage"
+	"github.com/loctools/go-l10n/loc"
 	log "github.com/sirupsen/logrus"
 	"os"
 	"strconv"
@@ -15,9 +17,10 @@ import (
 )
 
 const (
-	approveStatusTrPrefix   = "callbacks.approve.status."
-	approveStatusTrRevoked  = approveStatusTrPrefix + "revoked"
-	approveStatusTrNoAuthor = approveStatusTrPrefix + "no.author"
+	approveStatusTrPrefix    = "callbacks.approve.status."
+	approveStatusTrRevoked   = approveStatusTrPrefix + "revoked"
+	approveStatusTrNoAuthor  = approveStatusTrPrefix + "no.author"
+	approveStatusTrPublished = approveStatusTrPrefix + "published"
 
 	approved = "Approved"
 )
@@ -80,10 +83,9 @@ func (h *ApproveCallbackHandler) Handle(reqenv *base.RequestEnv, query *tgbotapi
 							WithField(logconst.FieldMethod, "Handle").
 							WithField("approvers", approvers).
 							WithField("required", requiredApprovals)
-
-						if len(approvers) >= requiredApprovals {
+						if role == dto.Admin || len(approvers) >= requiredApprovals {
 							logEntry.Info("The message is ready to be published!")
-							if err = h.publish(suggestion); err == nil {
+							if err = h.publish(suggestion, approvers, query.Message, reqenv.Lang); err == nil {
 								err = h.suggestionsService.Publish(dtoMessage)
 							}
 						} else {
@@ -116,14 +118,26 @@ func (h *ApproveCallbackHandler) Handle(reqenv *base.RequestEnv, query *tgbotapi
 	}
 }
 
-func (h *ApproveCallbackHandler) publish(suggestion *dto.Suggestion) error {
+func (h *ApproveCallbackHandler) publish(suggestion *dto.Suggestion, approvers []string, triggerMsg *tgbotapi.Message, lc *loc.Context) error {
 	var forward tgbotapi.Chattable
 	if suggestion.Anonymously {
 		forward = tgbotapi.NewCopyMessage(channelID, suggestion.UID, suggestion.MessageID)
 	} else {
 		forward = tgbotapi.NewForward(channelID, suggestion.UID, suggestion.MessageID)
 	}
-	return h.appEnv.Bot.Request(forward)
+	if err := h.appEnv.Bot.Request(forward); err != nil {
+		return err
+	}
+
+	newTriggerMsgText := fmt.Sprintf("%s\n\n_%s: %s_",
+		tgbotapi.EscapeText(tgbotapi.ModeMarkdown, triggerMsg.Text),
+		lc.Tr(approveStatusTrPublished),
+		tgbotapi.EscapeText(tgbotapi.ModeMarkdown, strings.Join(approvers, ", ")))
+	editTriggerMsg := tgbotapi.NewEditMessageTextAndMarkup(triggerMsg.Chat.ID, triggerMsg.MessageID,
+		newTriggerMsgText,
+		tgbotapi.InlineKeyboardMarkup{InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{}})
+	editTriggerMsg.ParseMode = tgbotapi.ModeMarkdown
+	return h.appEnv.Bot.Request(editTriggerMsg)
 }
 
 func parseMessageParams(data string) (*dto.Message, error) {

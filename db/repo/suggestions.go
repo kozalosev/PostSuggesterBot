@@ -35,18 +35,26 @@ func (service *SuggestionService) Create(msg *dto.Message, anonymously bool) err
 	return err
 }
 
-// Publish updates the row. It returns an error if the suggestion was already revoked.
+// Publish updates the row. It returns an error if the suggestion was already revoked or published.
 func (service *SuggestionService) Publish(msg *dto.Message) error {
-	_, err := service.appEnv.Database.Exec(service.appEnv.Ctx,
+	tag, err := service.appEnv.Database.Exec(service.appEnv.Ctx,
 		"UPDATE Suggestions SET published = true WHERE uid = $1 AND message_id = $2",
 		msg.ChatID, msg.MessageID)
-	return err
+	if err == nil && tag.RowsAffected() < 1 {
+		return NoRowsWereAffected
+	} else {
+		return err
+	}
 }
 
-// Revoke updates the row. It returns an error if the suggestion was already published.
+// Revoke updates the row. It returns an error if the suggestion was already published or revoked.
 func (service *SuggestionService) Revoke(msg *dto.Message) error {
-	_, err := service.appEnv.Database.Exec(service.appEnv.Ctx,
+	tag, err := service.appEnv.Database.Exec(service.appEnv.Ctx,
 		"UPDATE Suggestions SET revoked = true WHERE uid = $1 AND message_id = $2",
 		msg.ChatID, msg.MessageID)
-	return err
+	if err == nil && tag.RowsAffected() < 1 {
+		return NoRowsWereAffected
+	} else {
+		return err
+	}
 }
