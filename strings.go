@@ -5,7 +5,8 @@ func init() {
 		"commands.default.message.on.command": "Unknown command",
 		"callbacks.error":                     "The state was lost 😢",
 
-		"commands.help.description": "show help",
+		"commands.help.description":     "show help",
+		"commands.help.fields.language": "Choose your language:",
 
 		"commands.language.description":     "change the language",
 		"commands.language.fields.language": "Choose your language:",
@@ -42,7 +43,8 @@ func init() {
 		"commands.default.message.on.command": "Неизвестная команда",
 		"callbacks.error":                     "Состояние формы потерялось 😢",
 
-		"commands.help.description": "показать помощь",
+		"commands.help.description":     "показать помощь",
+		"commands.help.fields.language": "Выберите свой язык:",
 
 		"commands.language.description":     "сменить язык",
 		"commands.language.fields.language": "Выберите свой язык:",

@@ -48,6 +48,7 @@ func NewHelpHandler(langHandler *LanguageHandler) *HelpHandler {
 	h := &HelpHandler{
 		appEnv:       langHandler.appEnv,
 		stateStorage: langHandler.stateStorage,
+		langHandler:  langHandler,
 		userService:  langHandler.userService,
 	}
 	h.HandlerRefForTrait = h
