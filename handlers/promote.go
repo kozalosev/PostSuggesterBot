@@ -88,20 +88,21 @@ func (h *PromoteHandler) formAction(reqenv *base.RequestEnv, msg *tgbotapi.Messa
 	autoAdmins := fields.FindField(fieldAutoAdmins).Data == yes
 	role := dto.UserRole(fields.FindField(fieldRole).Data.(string))
 
-	candidates := h.resolveCandidates(uid, resolveName(msg.From), autoAdmins)
+	candidates := h.resolveCandidates(uid, autoAdmins)
 	log.WithField(logconst.FieldHandler, "PromoteHandler").
 		WithField(logconst.FieldMethod, "formAction").
-		Infof("I'm going to promote %v to the %s role", candidates, role)
+		Infof("I'm going to promote %+v to the %s role", candidates, role)
 
-	errs := funk.Map(candidates, func(c candidate) error {
-		if err := h.userService.Promote(c.uid, role); err == repo.NoRowsWereAffected {
-			if err := h.userService.Create(c.uid, c.name); err != nil && err != repo.NoRowsWereAffected {
+	candidates = funk.Filter(candidates, func(c *candidate) bool {
+		return !c.admin || !autoAdmins
+	}).([]*candidate)
+	errs := funk.Map(candidates, func(c *candidate) error {
+		if !c.exist {
+			if err := h.userService.Create(c.uid, c.name); err != nil {
 				return err
 			}
-			return h.userService.Promote(c.uid, role)
-		} else {
-			return err
 		}
+		return h.userService.Promote(c.uid, role)
 	}).([]error)
 	errs = funk.Filter(errs, func(e error) bool {
 		return e != nil
@@ -135,7 +136,7 @@ func (h *PromoteHandler) formAction(reqenv *base.RequestEnv, msg *tgbotapi.Messa
 	}
 }
 
-func (h *PromoteHandler) resolveCandidates(uid float64, name string, autoAdmins bool) []candidate {
+func (h *PromoteHandler) resolveCandidates(uid float64, autoAdmins bool) []*candidate {
 	if uid == 0 && autoAdmins {
 		if ids, err := h.fetchAdmins(); err == nil {
 			return ids
@@ -146,24 +147,39 @@ func (h *PromoteHandler) resolveCandidates(uid float64, name string, autoAdmins 
 				Error("unable to fetch UIDs of the chat administrators", err)
 		}
 	} else if uid > 0 {
-		return []candidate{{uid: int64(uid), name: name}}
+		return []*candidate{h.fetchUserInfo(int64(uid))}
 	}
 	return nil
 }
 
-func (h *PromoteHandler) fetchAdmins() ([]candidate, error) {
+func (h *PromoteHandler) fetchAdmins() ([]*candidate, error) {
 	reqConfig := tgbotapi.ChatAdministratorsConfig{ChatConfig: tgbotapi.ChatConfig{ChatID: adminChatID}}
 	admins, err := h.appEnv.Bot.GetStandardAPI().GetChatAdministrators(reqConfig)
-	return funk.Map(admins, func(u tgbotapi.ChatMember) candidate {
-		return candidate{
-			uid:  u.User.ID,
-			name: resolveName(u.User),
+	return funk.Map(admins, func(u tgbotapi.ChatMember) *candidate {
+		return h.fetchUserInfo(u.User.ID)
+	}).([]*candidate), err
+}
+
+func (h *PromoteHandler) fetchUserInfo(uid int64) *candidate {
+	if user, err := h.userService.Get(uid); err == nil {
+		return &candidate{
+			uid:   user.UID,
+			name:  user.Name,
+			exist: true,
+			admin: user.Role == dto.Admin,
 		}
-	}).([]candidate), err
+	} else {
+		return &candidate{
+			uid:   user.UID,
+			exist: false,
+		}
+	}
 }
 
 // candidate for promotion to another role
 type candidate struct {
-	uid  int64
-	name string
+	uid   int64
+	name  string
+	exist bool
+	admin bool
 }
