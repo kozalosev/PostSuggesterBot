@@ -4,6 +4,17 @@ _(for a Telegram channel)_
 
 [![CI Build](https://github.com/kozalosev/PostSuggesterBot/actions/workflows/ci-build.yml/badge.svg?branch=main&event=push)](https://github.com/kozalosev/PostSuggesterBot/actions/workflows/ci-build.yml)
 
+Some user suggests a message for the channel:
+
+![image](https://user-images.githubusercontent.com/25857981/234779419-6b2ef462-bdc1-40b6-a3b1-896051740ff5.png)
+
+The admins of the channel can approve and publish it:
+
+![image](https://user-images.githubusercontent.com/25857981/234779194-9dde2ea0-68e6-4d3d-a411-a4191755f609.png)
+
+The count of required approvals is configurable.
+
+
 Architecture
 ------------
 The bot consists of three components running within Docker containers:
