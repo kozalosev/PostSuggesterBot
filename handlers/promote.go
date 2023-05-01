@@ -156,25 +156,45 @@ func (h *PromoteHandler) formAction(reqenv *base.RequestEnv, msg *tgbotapi.Messa
 }
 
 func (h *PromoteHandler) resolveCandidates(uid float64, username string, autoAdmins bool) []*candidate {
-	if uid == 0 && autoAdmins {
-		if ids, err := h.fetchAdmins(); err == nil {
-			return ids
+	if uid == 0 && !autoAdmins {
+		return nil
+	}
+
+	users := make(tUserKey)
+	if uid > 0 {
+		users[tUID(uid)] = username
+	} else {
+		if admins, err := h.fetchAdmins(); err == nil {
+			users = admins
 		} else {
 			log.WithField(logconst.FieldHandler, "PromoteHandler").
-				WithField(logconst.FieldMethod, "formAction").
+				WithField(logconst.FieldMethod, "resolveCandidates").
 				WithField(logconst.FieldCalledMethod, "fetchAdmins").
-				Error("unable to fetch UIDs of the chat administrators", err)
+				Error("unable to fetch UIDs of the chat administrators: ", err)
+			return nil
 		}
-	} else if uid > 0 {
-		return []*candidate{<-h.fetchUserInfo(int64(uid), username)}
 	}
-	return nil
+
+	if info, err := h.fetchUsersInfo(users); err == nil {
+		return info
+	} else {
+		log.WithField(logconst.FieldHandler, "PromoteHandler").
+			WithField(logconst.FieldMethod, "resolveCandidates").
+			WithField(logconst.FieldCalledMethod, "fetchUsersInfo").
+			Error("unable to fetch candidates info: ", err)
+		return nil
+	}
 }
 
-func (h *PromoteHandler) fetchAdmins() ([]*candidate, error) {
-	channels := funk.Map([]int64{adminChatID, channelID}, func(chatID int64) <-chan *candidate {
+// more descriptive type names
+type tUID = int64
+type tUsername = string
+type tUserKey = map[tUID]tUsername
+
+func (h *PromoteHandler) fetchAdmins() (tUserKey, error) {
+	channels := funk.Map([]int64{adminChatID, channelID}, func(chatID int64) <-chan *tgbotapi.User {
 		return h.fetchAdminsForChat(chatID)
-	}).([]<-chan *candidate)
+	}).([]<-chan *tgbotapi.User)
 
 	done := make(chan struct{})
 	ch, err := harmony.FanIn(done, channels[0], channels[1])
@@ -182,47 +202,23 @@ func (h *PromoteHandler) fetchAdmins() ([]*candidate, error) {
 		return nil, err
 	}
 
-	var candidates []*candidate
-	for c := range ch {
-		candidates = append(candidates, c)
+	users := make(map[tUID]tUsername)
+	for u := range ch {
+		users[u.ID] = resolveName(u)
 	}
-	return candidates, nil
+	return users, nil
 }
 
-func (h *PromoteHandler) fetchAdminsForChat(chatID int64) <-chan *candidate {
-	ch := make(chan *candidate)
+func (h *PromoteHandler) fetchAdminsForChat(chatID int64) <-chan *tgbotapi.User {
+	ch := make(chan *tgbotapi.User)
 	go func() {
 		defer close(ch)
 
 		reqConfig := tgbotapi.ChatAdministratorsConfig{ChatConfig: tgbotapi.ChatConfig{ChatID: chatID}}
 		if members, err := h.appEnv.Bot.GetStandardAPI().GetChatAdministrators(reqConfig); err == nil {
-			members = funk.Filter(members, func(m tgbotapi.ChatMember) bool {
-				return !m.User.IsBot
-			}).([]tgbotapi.ChatMember)
-
-			switch len(members) {
-			case 0:
-				break
-			case 1:
-				ch <- <-h.fetchUserInfo(members[0].User.ID, resolveName(members[0].User))
-			default:
-				done := make(chan struct{})
-				rest := funk.Map(members[2:], func(member tgbotapi.ChatMember) <-chan *candidate {
-					return h.fetchUserInfo(member.User.ID, resolveName(member.User))
-				}).([]<-chan *candidate)
-				c, err := harmony.FanIn(done,
-					h.fetchUserInfo(members[0].User.ID, resolveName(members[0].User)),
-					h.fetchUserInfo(members[1].User.ID, resolveName(members[1].User)),
-					rest...)
-				if err == nil {
-					for d := range c {
-						ch <- d
-					}
-				} else {
-					log.WithField(logconst.FieldHandler, "PromoteHandler").
-						WithField(logconst.FieldMethod, "fetchAdminsForChat").
-						WithField(logconst.FieldCalledFunc, "FanIn").
-						Error(err)
+			for _, m := range members {
+				if !m.User.IsBot {
+					ch <- m.User
 				}
 			}
 		} else {
@@ -236,27 +232,46 @@ func (h *PromoteHandler) fetchAdminsForChat(chatID int64) <-chan *candidate {
 	return ch
 }
 
-func (h *PromoteHandler) fetchUserInfo(uid int64, username string) <-chan *candidate {
-	ch := make(chan *candidate)
-	go func() {
-		defer close(ch)
-
-		if user, err := h.userService.Get(uid); err == nil {
-			ch <- &candidate{
-				uid:      uid,
-				name:     user.Name,
+func (h *PromoteHandler) fetchUsersInfo(uidToName tUserKey) ([]*candidate, error) {
+	uids := keys(uidToName)
+	if users, err := h.userService.GetThemAll(uids); err == nil {
+		uidsExisting := make(map[int64]struct{})
+		candidates := funk.Map(users, func(u *dto.User) *candidate {
+			uidsExisting[u.UID] = struct{}{}
+			return &candidate{
+				uid:      u.UID,
+				name:     u.Name,
 				exist:    true,
-				currRole: user.Role,
+				currRole: u.Role,
 			}
-		} else {
-			ch <- &candidate{
+		}).([]*candidate)
+
+		uidsNotExisting := funk.FilterInt64(uids, func(uid int64) bool {
+			_, ok := uidsExisting[uid]
+			return !ok
+		})
+		for _, uid := range uidsNotExisting {
+			c := &candidate{
 				uid:   uid,
-				name:  username,
+				name:  uidToName[uid],
 				exist: false,
 			}
+			candidates = append(candidates, c)
 		}
-	}()
-	return ch
+		return candidates, nil
+	} else {
+		return nil, err
+	}
+}
+
+func keys[K comparable, V any](m map[K]V) []K {
+	keys := make([]K, len(m))
+	i := 0
+	for k := range m {
+		keys[i] = k
+		i++
+	}
+	return keys
 }
 
 // candidate for promotion to another role

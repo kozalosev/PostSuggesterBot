@@ -18,6 +18,19 @@ func TestUserService_CreateAndGet(t *testing.T) {
 	assert.Equal(t, TestUser, user.Name)
 }
 
+func TestUserService_GetThemAll(t *testing.T) {
+	clearDatabase(t)
+	assert.NoError(t, userService.Create(TestUID, TestUser))
+	uid2, name2 := TestUID+1, TestUser+"2"
+	assert.NoError(t, userService.Create(uid2, name2))
+
+	users, err := userService.GetThemAll([]int64{TestUID, uid2, TestUID + 3})
+	assert.NoError(t, err)
+	assert.Len(t, users, 2)
+	assert.Equal(t, TestUser, users[0].Name)
+	assert.Equal(t, name2, users[1].Name)
+}
+
 func TestUserService_BanAndUnban(t *testing.T) {
 	clearDatabase(t)
 	createTestUser(t)
