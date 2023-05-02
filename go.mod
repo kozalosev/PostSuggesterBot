@@ -20,6 +20,7 @@ require (
 	github.com/IBM/pgxpoolprometheus v1.1.1 // indirect
 	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/butuzov/harmony v0.0.0-20220201154807-0479a4fa1a73 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/containerd/containerd v1.6.19 // indirect

@@ -7,6 +7,9 @@ import (
 	"github.com/kozalosev/goSadTgBot/logconst"
 	"github.com/kozalosev/goSadTgBot/settings"
 	log "github.com/sirupsen/logrus"
+	"github.com/thoas/go-funk"
+	"strconv"
+	"strings"
 )
 
 var NoRowsWereAffected = errors.New("no rows were affected")
@@ -48,6 +51,33 @@ func (service *UserService) Get(uid int64) (*dto.User, error) {
 		"SELECT uid, name, banned, role FROM Users WHERE uid = $1", uid).
 		Scan(&user.UID, &user.Name, &user.Banned, &user.Role)
 	return &user, err
+}
+
+func (service *UserService) GetThemAll(uids []int64) ([]*dto.User, error) {
+	uidsStr := funk.Map(uids, func(uid int64) string {
+		return strconv.FormatInt(uid, 10)
+	}).([]string)
+	sqlValues := strings.Join(uidsStr, ",")
+	if res, err := service.appEnv.Database.Query(service.appEnv.Ctx,
+		"SELECT uid, name, banned, role FROM Users WHERE uid IN ("+sqlValues+")"); err == nil {
+
+		var users []*dto.User
+		for res.Next() {
+			var user dto.User
+			if err = res.Scan(&user.UID, &user.Name, &user.Banned, &user.Role); err == nil {
+				users = append(users, &user)
+			} else {
+				log.WithField(logconst.FieldService, "UserService").
+					WithField(logconst.FieldMethod, "GetThemAll").
+					WithField(logconst.FieldCalledObject, "Rows").
+					WithField(logconst.FieldCalledMethod, "Scan").
+					Error(err)
+			}
+		}
+		return users, nil
+	} else {
+		return nil, err
+	}
 }
 
 // Create a new user in the database. The NoRowsWereAffected error will be returned if he already exists.
