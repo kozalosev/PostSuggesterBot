@@ -16,7 +16,7 @@ func init() {
 		"handlers.suggest.fields.confirmation":     "Are you sure the post is ready to be sent for approval to publish?",
 
 		"commands.promote.fields.role":       "Choose the role below:",
-		"commands.promote.fields.autoAdmins": "Do you want to promote all administrators of the chat?",
+		"commands.promote.fields.autoAdmins": "Do you want to promote all administrators of the chat and channel?",
 		"commands.promote.status.success":    "The following users has been promoted: ",
 		"commands.promote.status.nobody":     "No one to promote 😕",
 
@@ -54,7 +54,7 @@ func init() {
 		"handlers.suggest.fields.confirmation":     "Вы уверены, что хотите отправить пост на одобрение к публикации?",
 
 		"commands.promote.fields.role":       "Выберите роль из списка ниже:",
-		"commands.promote.fields.autoAdmins": "Вы хотите изменить роль для всех администраторов чата?",
+		"commands.promote.fields.autoAdmins": "Вы хотите изменить роль для всех администраторов чата и канала?",
 		"commands.promote.status.success":    "Следующие пользователи были назначены: ",
 		"commands.promote.status.nobody":     "Некого назначать 😕",
 
