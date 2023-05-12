@@ -45,6 +45,7 @@ type ApproveCallbackHandler struct {
 
 	approvalService    *repo.ApprovalService
 	suggestionsService *repo.SuggestionService
+	updateName         nameUpdater
 }
 
 func NewApproveCallbackHandler(appEnv *base.ApplicationEnv) *ApproveCallbackHandler {
@@ -52,6 +53,7 @@ func NewApproveCallbackHandler(appEnv *base.ApplicationEnv) *ApproveCallbackHand
 		appEnv:             appEnv,
 		approvalService:    repo.NewApprovalService(appEnv),
 		suggestionsService: repo.NewSuggestionService(appEnv),
+		updateName:         buildNameUpdater("ApproveCallbackHandler", repo.NewUserService(appEnv)),
 	}
 }
 
@@ -60,6 +62,8 @@ func (h *ApproveCallbackHandler) GetCallbackPrefix() string {
 }
 
 func (h *ApproveCallbackHandler) Handle(reqenv *base.RequestEnv, query *tgbotapi.CallbackQuery) {
+	h.updateName(query.From)
+
 	role := reqenv.Options.(*dto.UserOptions).Role
 	var err error
 	if role == dto.UsualUser {

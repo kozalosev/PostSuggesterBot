@@ -41,6 +41,7 @@ type SuggestHandler struct {
 	stateStorage wizard.StateStorage
 
 	suggestionService *repo.SuggestionService
+	updateName        nameUpdater
 }
 
 func NewSuggestHandler(appEnv *base.ApplicationEnv, stateStorage wizard.StateStorage) *SuggestHandler {
@@ -48,6 +49,7 @@ func NewSuggestHandler(appEnv *base.ApplicationEnv, stateStorage wizard.StateSto
 		appEnv:            appEnv,
 		stateStorage:      stateStorage,
 		suggestionService: repo.NewSuggestionService(appEnv),
+		updateName:        buildNameUpdater("SuggestHandler", repo.NewUserService(appEnv)),
 	}
 }
 
@@ -81,6 +83,8 @@ func (*SuggestHandler) CanHandle(_ *base.RequestEnv, msg *tgbotapi.Message) bool
 }
 
 func (h *SuggestHandler) Handle(reqenv *base.RequestEnv, msg *tgbotapi.Message) {
+	h.updateName(msg.From)
+
 	reply := base.NewReplier(h.appEnv, reqenv, msg)
 
 	if reqenv.Options.(*dto.UserOptions).Banned {
