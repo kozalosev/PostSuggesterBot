@@ -129,14 +129,14 @@ func (h *ApproveCallbackHandler) publish(suggestion *dto.Suggestion, approvers [
 		return err
 	}
 
-	newTriggerMsgText := fmt.Sprintf("%s\n\n_%s: %s_",
-		tgbotapi.EscapeText(tgbotapi.ModeMarkdown, triggerMsg.Text),
+	newTriggerMsgText := fmt.Sprintf("%s\n\n<i>%s: %s</i>",
+		tgbotapi.EscapeText(tgbotapi.ModeHTML, triggerMsg.Text),
 		lc.Tr(approveStatusTrPublished),
-		tgbotapi.EscapeText(tgbotapi.ModeMarkdown, strings.Join(approvers, ", ")))
+		tgbotapi.EscapeText(tgbotapi.ModeHTML, strings.Join(approvers, ", ")))
 	editTriggerMsg := tgbotapi.NewEditMessageTextAndMarkup(triggerMsg.Chat.ID, triggerMsg.MessageID,
 		newTriggerMsgText,
 		tgbotapi.InlineKeyboardMarkup{InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{}})
-	editTriggerMsg.ParseMode = tgbotapi.ModeMarkdown
+	editTriggerMsg.ParseMode = tgbotapi.ModeHTML
 	return h.appEnv.Bot.Request(editTriggerMsg)
 }
 
