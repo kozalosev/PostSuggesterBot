@@ -23,6 +23,7 @@ func init() {
 		"callbacks.approve.status.duplicate": "You approved this post already 😊",
 		"callbacks.approve.status.revoked":   "Unfortunately, the post was revoked 😞",
 		"callbacks.approve.status.published": "The post was published after it had been approved by the following people",
+		"callbacks.approve.status.no.author": "You have to be an author or admin to approve the post",
 
 		"callbacks.revoke.status.published": "I'm sorry but revocation is not possible since the post has been already published",
 
@@ -61,6 +62,7 @@ func init() {
 		"callbacks.approve.status.duplicate": "Вы уже одобряли этот пост 😊",
 		"callbacks.approve.status.revoked":   "К сожалению, пост был отозван 😞",
 		"callbacks.approve.status.published": "Пост был опубликован после одобрения следующими людьми",
+		"callbacks.approve.status.no.author": "Одобрять посты к публикации могут только авторы или администраторы",
 
 		"callbacks.revoke.status.published": "Сожалею, но отозвать данный пост невозможно, так как он уже был опубликован",
 
