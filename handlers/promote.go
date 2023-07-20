@@ -72,7 +72,7 @@ func (h *PromoteHandler) Handle(reqenv *base.RequestEnv, msg *tgbotapi.Message) 
 
 	if msg.ReplyToMessage != nil {
 		user := msg.ReplyToMessage.From
-		form.AddPrefilledField(fieldUID, user.ID)
+		form.AddPrefilledField(fieldUID, float64(user.ID))
 		form.AddPrefilledField(fieldName, resolveName(user))
 	} else {
 		form.AddEmptyField(fieldUID, wizard.Text)
