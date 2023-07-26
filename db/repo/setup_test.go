@@ -80,7 +80,9 @@ func setup() {
 }
 
 func shutDown() {
-	if err := container.Terminate(ctx); err != nil {
-		panic(fmt.Sprintf("failed to terminate container: %s", err.Error()))
+	if container != nil {
+		if err := container.Terminate(ctx); err != nil {
+			panic(fmt.Sprintf("failed to terminate container: %s", err.Error()))
+		}
 	}
 }
