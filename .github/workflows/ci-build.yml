@@ -9,7 +9,6 @@ jobs:
     env:
       CHANNEL_ID: 0
       ADMIN_CHAT_ID: 0
-      TESTCONTAINERS_RYUK_DISABLED: true
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
