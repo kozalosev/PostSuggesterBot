@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
+	tgbotapi "github.com/OvyFlash/telegram-bot-api"
 	"github.com/go-redis/redis/v8"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kozalosev/PostSuggesterBot/db/repo"
 	"github.com/kozalosev/PostSuggesterBot/handlers"

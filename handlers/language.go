@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/OvyFlash/telegram-bot-api"
 	"github.com/kozalosev/PostSuggesterBot/db/repo"
 	"github.com/kozalosev/goSadTgBot/base"
 	"github.com/kozalosev/goSadTgBot/logconst"
@@ -58,8 +58,12 @@ func (*LanguageHandler) GetCommands() []string {
 	return []string{"language", "lang"}
 }
 
+func (*LanguageHandler) GetScopes() []base.CommandScope {
+	return commandScopePrivateChats
+}
+
 func (h *LanguageHandler) Handle(reqenv *base.RequestEnv, msg *tgbotapi.Message) {
-	arg := base.GetCommandArgument(msg)
+	arg := msg.CommandArguments()
 
 	langForm := wizard.NewWizard(h, 1)
 	if len(arg) > 0 && slices.Contains(supportedLangCodes, arg) {
@@ -71,7 +75,7 @@ func (h *LanguageHandler) Handle(reqenv *base.RequestEnv, msg *tgbotapi.Message)
 }
 
 func (h *LanguageHandler) changeLangAction(reqenv *base.RequestEnv, msg *tgbotapi.Message, fields wizard.Fields) {
-	langFlag := fields.FindField(fieldLanguage).Data.(string)
+	langFlag := fields.FindField(fieldLanguage).Data.(wizard.Txt).Value
 	langCode := langFlagToCode(langFlag)
 	reply := base.NewReplier(h.appEnv, reqenv, msg)
 

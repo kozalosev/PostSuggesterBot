@@ -2,7 +2,7 @@ package handlers
 
 import (
 	_ "embed"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/OvyFlash/telegram-bot-api"
 	"github.com/kozalosev/PostSuggesterBot/db/repo"
 	"github.com/kozalosev/goSadTgBot/base"
 	"github.com/kozalosev/goSadTgBot/logconst"
@@ -59,6 +59,10 @@ func (*HelpHandler) GetCommands() []string {
 	return []string{"help", "start"}
 }
 
+func (*HelpHandler) GetScopes() []base.CommandScope {
+	return commandScopePrivateChats
+}
+
 func (h *HelpHandler) GetWizardEnv() *wizard.Env {
 	return wizard.NewEnv(h.appEnv, h.stateStorage)
 }
@@ -92,7 +96,7 @@ func (h *HelpHandler) Handle(reqenv *base.RequestEnv, msg *tgbotapi.Message) {
 func (h *HelpHandler) helpAction(reqenv *base.RequestEnv, msg *tgbotapi.Message, fields wizard.Fields) {
 	h.langHandler.changeLangAction(reqenv, msg, fields)
 
-	lang := fields.FindField(fieldLanguage).Data.(string)
+	lang := fields.FindField(fieldLanguage).Data.(wizard.Txt).Value
 	h.sendHelp(msg, langFlagToCode(lang))
 }
 

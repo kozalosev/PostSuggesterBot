@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/OvyFlash/telegram-bot-api"
 	"github.com/kozalosev/PostSuggesterBot/db/dto"
 	"github.com/kozalosev/goSadTgBot/base"
 	"github.com/loctools/go-l10n/loc"

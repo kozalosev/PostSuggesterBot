@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"fmt"
+	tgbotapi "github.com/OvyFlash/telegram-bot-api"
 	"github.com/butuzov/harmony"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/kozalosev/PostSuggesterBot/db/dto"
 	"github.com/kozalosev/PostSuggesterBot/db/repo"
 	"github.com/kozalosev/goSadTgBot/base"
@@ -47,17 +47,17 @@ func (h *PromoteHandler) GetWizardDescriptor() *wizard.FormDescriptor {
 	desc := wizard.NewWizardDescriptor(h.formAction)
 
 	uid := desc.AddField(fieldUID, promoteFieldsTrPrefix+fieldUID)
-	uid.SkipIf = wizard.SkipIfFiledNotEmpty{Name: fieldAutoAdmins}
+	uid.SkipIf = wizard.SkipIfFieldNotEmpty{Name: fieldAutoAdmins}
 
 	name := desc.AddField(fieldName, promoteFieldsTrPrefix+fieldName)
-	name.SkipIf = wizard.SkipIfFiledNotEmpty{Name: fieldAutoAdmins}
+	name.SkipIf = wizard.SkipIfFieldNotEmpty{Name: fieldAutoAdmins}
 
 	role := desc.AddField(fieldRole, promoteFieldsTrPrefix+fieldRole)
 	role.InlineKeyboardAnswers = []string{string(dto.UsualUser), string(dto.Author), string(dto.Admin)}
 
 	autoAdmins := desc.AddField(fieldAutoAdmins, promoteFieldsTrPrefix+fieldAutoAdmins)
 	autoAdmins.InlineKeyboardAnswers = []string{yes, no}
-	autoAdmins.SkipIf = wizard.SkipIfFiledNotEmpty{Name: fieldUID}
+	autoAdmins.SkipIf = wizard.SkipIfFieldNotEmpty{Name: fieldUID}
 
 	return desc
 }
@@ -79,7 +79,7 @@ func (h *PromoteHandler) Handle(reqenv *base.RequestEnv, msg *tgbotapi.Message) 
 		form.AddEmptyField(fieldName, wizard.Text)
 	}
 
-	if arg := base.GetCommandArgument(msg); len(arg) > 0 {
+	if arg := msg.CommandArguments(); len(arg) > 0 {
 		form.AddPrefilledField(fieldRole, arg)
 	} else {
 		form.AddEmptyField(fieldRole, wizard.Text)
@@ -95,10 +95,10 @@ func (h *PromoteHandler) formAction(reqenv *base.RequestEnv, msg *tgbotapi.Messa
 	)
 	if uidData := fields.FindField(fieldUID).Data; uidData != nil {
 		uid = uidData.(float64)
-		username = fields.FindField(fieldName).Data.(string)
+		username = fields.FindField(fieldName).Data.(wizard.Txt).Value
 	}
 	autoAdmins := fields.FindField(fieldAutoAdmins).Data == yes
-	role := dto.UserRole(fields.FindField(fieldRole).Data.(string))
+	role := dto.UserRole(fields.FindField(fieldRole).Data.(wizard.Txt).Value)
 
 	candidates := h.resolveCandidates(uid, username, autoAdmins)
 	log.WithField(logconst.FieldHandler, "PromoteHandler").

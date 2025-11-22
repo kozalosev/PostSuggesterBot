@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/OvyFlash/telegram-bot-api"
 	"github.com/kozalosev/PostSuggesterBot/db/dto"
 	"github.com/kozalosev/PostSuggesterBot/db/repo"
 	"github.com/kozalosev/goSadTgBot/base"
@@ -100,7 +100,7 @@ func (h *SuggestHandler) Handle(reqenv *base.RequestEnv, msg *tgbotapi.Message) 
 }
 
 func (h *SuggestHandler) formAction(reqenv *base.RequestEnv, msg *tgbotapi.Message, fields wizard.Fields) {
-	confirmation := fields.FindField(fieldConfirmation).Data == yes
+	confirmation := fields.FindField(fieldConfirmation).Data.(wizard.Txt).Value == yes
 	reply := base.NewReplier(h.appEnv, reqenv, msg)
 	if !confirmation {
 		if err := h.stateStorage.DeleteState(msg.From.ID); err != nil {
@@ -115,8 +115,10 @@ func (h *SuggestHandler) formAction(reqenv *base.RequestEnv, msg *tgbotapi.Messa
 	}
 
 	messageID := int(fields.FindField(fieldMessageID).Data.(float64))
-	anonymously := fields.FindField(fieldAnonymously).Data == anon
-	visibleForAdmins := fields.FindField(fieldVisibleForAdmins).Data == yes
+	anonymously := fields.FindField(fieldAnonymously).Data.(wizard.Txt).Value == anon
+
+	visibleForAdminsFieldData := fields.FindField(fieldVisibleForAdmins).Data
+	visibleForAdmins := visibleForAdminsFieldData != nil && visibleForAdminsFieldData.(wizard.Txt).Value == yes
 
 	messageEntity := dto.NewMessage(msg.From.ID, messageID)
 	if err := h.suggestionService.Create(messageEntity, anonymously); err == nil {
@@ -138,8 +140,8 @@ func (h *SuggestHandler) formAction(reqenv *base.RequestEnv, msg *tgbotapi.Messa
 func (h *SuggestHandler) replyWithApprovalButtons(c tgbotapi.Chattable, authorUID int64, messageID int, lc *loc.Context) {
 	if sentMessage, err := h.appEnv.Bot.Send(c); err == nil {
 		// CopyMessage returns only MessageID
-		if sentMessage.Chat == nil {
-			sentMessage.Chat = &tgbotapi.Chat{ID: adminChatID}
+		if sentMessage.Chat.ID == 0 {
+			sentMessage.Chat = tgbotapi.Chat{ID: adminChatID}
 		}
 		approveCallbackData := fmt.Sprintf("approve:%d:%d", authorUID, messageID)
 		banCallbackData := fmt.Sprintf("ban:%d", authorUID)
