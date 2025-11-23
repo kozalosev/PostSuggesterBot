@@ -9,7 +9,6 @@ import (
 	"github.com/kozalosev/goSadTgBot/base"
 	"github.com/kozalosev/goSadTgBot/logconst"
 	"github.com/kozalosev/goSadTgBot/wizard"
-	log "github.com/sirupsen/logrus"
 	"github.com/thoas/go-funk"
 )
 
@@ -23,6 +22,8 @@ const (
 	promoteStatusTrSuccess = "commands.promote.status.success"
 	promoteStatusTrNoOne   = "commands.promote.status.nobody"
 )
+
+var promoteHandlerLogger = logconst.NewLoggerForHandler("PromoteHandler")
 
 type PromoteHandler struct {
 	appEnv       *base.ApplicationEnv
@@ -89,6 +90,8 @@ func (h *PromoteHandler) Handle(reqenv *base.RequestEnv, msg *tgbotapi.Message) 
 }
 
 func (h *PromoteHandler) formAction(reqenv *base.RequestEnv, msg *tgbotapi.Message, fields wizard.Fields) {
+	var logger = promoteHandlerLogger.ForMethod("formAction")
+
 	var (
 		uid      float64
 		username string
@@ -101,9 +104,7 @@ func (h *PromoteHandler) formAction(reqenv *base.RequestEnv, msg *tgbotapi.Messa
 	role := dto.UserRole(fields.FindField(fieldRole).Data.(wizard.Txt).Value)
 
 	candidates := h.resolveCandidates(uid, username, autoAdmins)
-	log.WithField(logconst.FieldHandler, "PromoteHandler").
-		WithField(logconst.FieldMethod, "formAction").
-		Infof("I'm going to promote %s to the %s role", candidates, role)
+	logger.Info(fmt.Sprintf("I'm going to promote %s to the %s role", candidates, role))
 
 	candidates = funk.Filter(candidates, func(c *candidate) bool {
 		return c.currRole != dto.Admin || !autoAdmins
@@ -117,9 +118,7 @@ func (h *PromoteHandler) formAction(reqenv *base.RequestEnv, msg *tgbotapi.Messa
 		if c.currRole != role {
 			return h.userService.Promote(c.uid, role)
 		} else {
-			log.WithField(logconst.FieldHandler, "PromoteHandler").
-				WithField(logconst.FieldMethod, "formAction").
-				Infof("%s has %s role already", c.name, role)
+			logger.Info(fmt.Sprintf("%s has %s role already", c.name, role))
 			return nil
 		}
 	}).([]error)
@@ -127,19 +126,17 @@ func (h *PromoteHandler) formAction(reqenv *base.RequestEnv, msg *tgbotapi.Messa
 		return e != nil
 	}).([]error)
 	for _, e := range errs {
-		log.WithField(logconst.FieldHandler, "PromoteHandler").
-			WithField(logconst.FieldMethod, "formAction").
-			WithField(logconst.FieldCalledObject, "UserService").
-			WithField(logconst.FieldCalledMethod, "Promote").
-			Error("unable to promote the user", e)
+		logger.Error("unable to promote the user",
+			logconst.FieldCalledObject, "UserService",
+			logconst.FieldCalledMethod, "Promote",
+			logconst.FieldError, e)
 	}
 
 	if err := h.stateStorage.DeleteState(msg.From.ID); err != nil {
-		log.WithField(logconst.FieldHandler, "PromoteHandler").
-			WithField(logconst.FieldMethod, "formAction").
-			WithField(logconst.FieldCalledObject, "StateStorage").
-			WithField(logconst.FieldCalledMethod, "DeleteState").
-			Error("unable to delete the state: ", err)
+		logger.Error("unable to delete the state",
+			logconst.FieldCalledObject, "StateStorage",
+			logconst.FieldCalledMethod, "DeleteState",
+			logconst.FieldError, err)
 	}
 
 	reply := base.NewReplier(h.appEnv, reqenv, msg)
@@ -167,10 +164,10 @@ func (h *PromoteHandler) resolveCandidates(uid float64, username string, autoAdm
 		if admins, err := h.fetchAdmins(); err == nil {
 			users = admins
 		} else {
-			log.WithField(logconst.FieldHandler, "PromoteHandler").
-				WithField(logconst.FieldMethod, "resolveCandidates").
-				WithField(logconst.FieldCalledMethod, "fetchAdmins").
-				Error("unable to fetch UIDs of the chat administrators: ", err)
+			promoteHandlerLogger.ForMethod("resolveCandidates").
+				Error("unable to fetch UIDs of the chat administrators",
+					logconst.FieldCalledMethod, "fetchAdmins",
+					logconst.FieldError, err)
 			return nil
 		}
 	}
@@ -178,10 +175,10 @@ func (h *PromoteHandler) resolveCandidates(uid float64, username string, autoAdm
 	if info, err := h.fetchUsersInfo(users); err == nil {
 		return info
 	} else {
-		log.WithField(logconst.FieldHandler, "PromoteHandler").
-			WithField(logconst.FieldMethod, "resolveCandidates").
-			WithField(logconst.FieldCalledMethod, "fetchUsersInfo").
-			Error("unable to fetch candidates info: ", err)
+		promoteHandlerLogger.ForMethod("resolveCandidates").
+			Error("unable to fetch candidates info",
+				logconst.FieldCalledMethod, "fetchUsersInfo",
+				logconst.FieldError, err)
 		return nil
 	}
 }
@@ -222,11 +219,11 @@ func (h *PromoteHandler) fetchAdminsForChat(chatID int64) <-chan *tgbotapi.User 
 				}
 			}
 		} else {
-			log.WithField(logconst.FieldHandler, "PromoteHandler").
-				WithField(logconst.FieldMethod, "fetchAdminsForChat").
-				WithField(logconst.FieldCalledObject, "BotAPI").
-				WithField(logconst.FieldCalledMethod, "GetChatAdministrators").
-				Error("unable to get the list of administrators", err)
+			promoteHandlerLogger.ForMethod("fetchAdminsForChat").
+				Error("unable to get the list of administrators",
+					logconst.FieldCalledObject, "BotAPI",
+					logconst.FieldCalledMethod, "GetChatAdministrators",
+					logconst.FieldError, err)
 		}
 	}()
 	return ch

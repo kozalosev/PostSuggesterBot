@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"github.com/kozalosev/goSadTgBot/logconst"
-	log "github.com/sirupsen/logrus"
+	log "log/slog"
 	"os"
 	"strconv"
 )
@@ -23,9 +23,9 @@ func parseNotUserID(idEnv string) int64 {
 
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		log.WithField(logconst.FieldFunc, "parseNotUserID").
-			WithField(logconst.FieldConst, idEnv).
-			Fatal(err)
+		logconst.FailedToParseEnvironmentVariableWithContext(
+			log.With(logconst.FieldFunc, "parseNotUserID"),
+			idEnv, err)
 	}
 	return id
 }

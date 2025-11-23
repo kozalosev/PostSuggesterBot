@@ -15,7 +15,7 @@ import (
 	"github.com/kozalosev/goSadTgBot/storage"
 	"github.com/kozalosev/goSadTgBot/wizard"
 	"github.com/loctools/go-l10n/loc"
-	log "github.com/sirupsen/logrus"
+	log "log/slog"
 	"os"
 	"os/signal"
 	"strings"
@@ -68,8 +68,8 @@ func main() {
 	}
 
 	if wasPopulated := wizard.PopulateWizardDescriptors(messageHandlers); !wasPopulated {
-		log.WithField(logconst.FieldFunc, "main").
-			Warning("Wizard actions map already has been populated; skipping...")
+		log.Warn("Wizard actions map already has been populated; skipping...",
+			logconst.FieldFunc, "main")
 	}
 
 	var (
@@ -156,9 +156,10 @@ func initHandlers(appEnv *base.ApplicationEnv, stateStorage wizard.StateStorage)
 func shutdown(stateStorage wizard.StateStorage, db *pgxpool.Pool) {
 	db.Close()
 	if err := stateStorage.Close(); err != nil {
-		log.WithField(logconst.FieldFunc, "shutdown").
-			WithField(logconst.FieldCalledObject, "StateStorage").
-			WithField(logconst.FieldCalledMethod, "Close").
-			Error(err)
+		log.Error("attempt to close the state storage failed",
+			logconst.FieldFunc, "shutdown",
+			logconst.FieldCalledObject, "StateStorage",
+			logconst.FieldCalledMethod, "Close",
+			logconst.FieldError, err)
 	}
 }

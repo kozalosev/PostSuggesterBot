@@ -7,7 +7,7 @@ import (
 	"github.com/kozalosev/goSadTgBot/base"
 	"github.com/kozalosev/goSadTgBot/logconst"
 	"github.com/kozalosev/goSadTgBot/wizard"
-	log "github.com/sirupsen/logrus"
+	log "log/slog"
 	"os"
 	"strings"
 )
@@ -83,11 +83,12 @@ func (h *HelpHandler) Handle(reqenv *base.RequestEnv, msg *tgbotapi.Message) {
 		langForm.ProcessNextField(reqenv, msg)
 	} else {
 		if err != repo.NoRowsWereAffected {
-			log.WithField(logconst.FieldHandler, "HelpHandler").
-				WithField(logconst.FieldMethod, "Handle").
-				WithField(logconst.FieldCalledObject, "UserService").
-				WithField(logconst.FieldCalledMethod, "Create").
-				Error(err)
+			log.Error("failed to create a new user",
+				logconst.FieldHandler, "HelpHandler",
+				logconst.FieldMethod, "Handle",
+				logconst.FieldCalledObject, "UserService",
+				logconst.FieldCalledMethod, "Create",
+				logconst.FieldError, err)
 		}
 		h.sendHelp(msg, reqenv.Lang.GetLanguage())
 	}

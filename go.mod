@@ -7,9 +7,8 @@ require (
 	github.com/butuzov/harmony v0.0.0-20220201154807-0479a4fa1a73
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/jackc/pgx/v5 v5.7.6
-	github.com/kozalosev/goSadTgBot v0.4.1-0.20251121024738-a2c2e06162c7
+	github.com/kozalosev/goSadTgBot v0.4.1-0.20251123014044-38bb203f0576
 	github.com/loctools/go-l10n v0.0.0-20191031185225-4f8f121cf651
-	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.40.0
 	github.com/thoas/go-funk v0.9.3
@@ -73,6 +72,7 @@ require (
 	github.com/prometheus/common v0.67.4 // indirect
 	github.com/prometheus/procfs v0.19.2 // indirect
 	github.com/shirou/gopsutil/v4 v4.25.10 // indirect
+	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/tklauser/go-sysconf v0.3.16 // indirect
 	github.com/tklauser/numcpus v0.11.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect

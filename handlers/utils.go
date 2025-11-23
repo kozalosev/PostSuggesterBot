@@ -4,7 +4,7 @@ import (
 	tgbotapi "github.com/OvyFlash/telegram-bot-api"
 	"github.com/kozalosev/PostSuggesterBot/db/repo"
 	"github.com/kozalosev/goSadTgBot/logconst"
-	log "github.com/sirupsen/logrus"
+	log "log/slog"
 )
 
 type nameUpdater func(user *tgbotapi.User)
@@ -13,13 +13,14 @@ func buildNameUpdater(handlerName string, userService *repo.UserService) nameUpd
 	return func(user *tgbotapi.User) {
 		newName := resolveName(user)
 		if err := userService.UpdateName(user.ID, newName); err != nil {
-			log.WithField(logconst.FieldHandler, handlerName).
-				WithField(logconst.FieldMethod, "Handle").
-				WithField(logconst.FieldCalledObject, "UserService").
-				WithField(logconst.FieldCalledMethod, "UpdateName").
-				WithField("uid", user.ID).
-				WithField("name", newName).
-				Error("unable to update the name: ", err)
+			log.Error("unable to update the name",
+				logconst.FieldHandler, handlerName,
+				logconst.FieldMethod, "Handle",
+				logconst.FieldCalledObject, "UserService",
+				logconst.FieldCalledMethod, "UpdateName",
+				"uid", user.ID,
+				"name", newName,
+				logconst.FieldError, err)
 		}
 	}
 }

@@ -4,7 +4,6 @@ import (
 	"github.com/kozalosev/PostSuggesterBot/db/dto"
 	"github.com/kozalosev/goSadTgBot/base"
 	"github.com/kozalosev/goSadTgBot/logconst"
-	log "github.com/sirupsen/logrus"
 )
 
 // ApprovalService is a repository for the Approvals table.
@@ -33,11 +32,7 @@ func (service *ApprovalService) GetApprovers(msg *dto.Message) ([]string, error)
 		if err = rows.Scan(&approver); err == nil {
 			approvers = append(approvers, approver)
 		} else {
-			log.WithField(logconst.FieldService, "ApprovalService").
-				WithField(logconst.FieldMethod, "GetApprovers").
-				WithField(logconst.FieldCalledObject, "Rows").
-				WithField(logconst.FieldCalledMethod, "Scan").
-				Error(err)
+			logconst.FailedToScanDatabaseRow("ApprovalService", "GetApprovers", err)
 		}
 	}
 	return approvers, err

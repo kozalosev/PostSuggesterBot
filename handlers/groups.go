@@ -5,7 +5,7 @@ import (
 	"github.com/kozalosev/goSadTgBot/base"
 	"github.com/kozalosev/goSadTgBot/logconst"
 	"github.com/kozalosev/goSadTgBot/wizard"
-	log "github.com/sirupsen/logrus"
+	log "log/slog"
 )
 
 // NotPrivateChatFallbackHandler is a guard against accidental execution of the wizard in the admin chat.
@@ -23,11 +23,12 @@ func (f *NotPrivateChatFallbackHandler) CanHandle(_ *base.RequestEnv, msg *tgbot
 
 func (f *NotPrivateChatFallbackHandler) Handle(_ *base.RequestEnv, msg *tgbotapi.Message) {
 	if err := f.stateStorage.DeleteState(msg.From.ID); err != nil {
-		log.WithField(logconst.FieldHandler, "NotPrivateChatFallbackHandler").
-			WithField(logconst.FieldMethod, "Handle").
-			WithField(logconst.FieldCalledObject, "StateStorage").
-			WithField(logconst.FieldCalledMethod, "DeleteState").
-			WithField("UID", msg.From.ID).
-			Error("unable to delete the state: ", err)
+		log.Error("unable to delete the state",
+			logconst.FieldHandler, "NotPrivateChatFallbackHandler",
+			logconst.FieldMethod, "Handle",
+			logconst.FieldCalledObject, "StateStorage",
+			logconst.FieldCalledMethod, "DeleteState",
+			"UID", msg.From.ID,
+			logconst.FieldError, err)
 	}
 }

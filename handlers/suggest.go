@@ -9,7 +9,7 @@ import (
 	"github.com/kozalosev/goSadTgBot/logconst"
 	"github.com/kozalosev/goSadTgBot/wizard"
 	"github.com/loctools/go-l10n/loc"
-	log "github.com/sirupsen/logrus"
+	log "log/slog"
 )
 
 const (
@@ -104,11 +104,12 @@ func (h *SuggestHandler) formAction(reqenv *base.RequestEnv, msg *tgbotapi.Messa
 	reply := base.NewReplier(h.appEnv, reqenv, msg)
 	if !confirmation {
 		if err := h.stateStorage.DeleteState(msg.From.ID); err != nil {
-			log.WithField(logconst.FieldHandler, "SuggestHandler").
-				WithField(logconst.FieldMethod, "formAction").
-				WithField(logconst.FieldCalledObject, "StateStorage").
-				WithField(logconst.FieldCalledMethod, "DeleteState").
-				Error("unable to delete the state: ", err)
+			log.Error("unable to delete the state",
+				logconst.FieldHandler, "SuggestHandler",
+				logconst.FieldMethod, "formAction",
+				logconst.FieldCalledObject, "StateStorage",
+				logconst.FieldCalledMethod, "DeleteState",
+				logconst.FieldError, err)
 		}
 		reply(refusedMessageTextTr)
 		return
@@ -150,10 +151,11 @@ func (h *SuggestHandler) replyWithApprovalButtons(c tgbotapi.Chattable, authorUI
 			{Text: lc.Tr(ban), CallbackData: &banCallbackData},
 		})
 	} else {
-		log.WithField(logconst.FieldHandler, "SuggestHandler").
-			WithField(logconst.FieldMethod, "replyWithApprovalButtons").
-			WithField(logconst.FieldCalledObject, "BotAPI").
-			WithField(logconst.FieldCalledMethod, "Send").
-			Error(err)
+		log.Error("failed to forward a message",
+			logconst.FieldHandler, "SuggestHandler",
+			logconst.FieldMethod, "replyWithApprovalButtons",
+			logconst.FieldCalledObject, "BotAPI",
+			logconst.FieldCalledMethod, "Send",
+			logconst.FieldError, err)
 	}
 }

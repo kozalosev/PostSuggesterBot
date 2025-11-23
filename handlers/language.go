@@ -7,8 +7,8 @@ import (
 	"github.com/kozalosev/goSadTgBot/logconst"
 	"github.com/kozalosev/goSadTgBot/settings"
 	"github.com/kozalosev/goSadTgBot/wizard"
-	log "github.com/sirupsen/logrus"
 	"golang.org/x/exp/slices"
+	log "log/slog"
 )
 
 const (
@@ -81,11 +81,12 @@ func (h *LanguageHandler) changeLangAction(reqenv *base.RequestEnv, msg *tgbotap
 
 	err := h.userService.ChangeLanguage(msg.From.ID, settings.LangCode(langCode))
 	if err != nil {
-		log.WithField(logconst.FieldHandler, "LanguageHandler").
-			WithField(logconst.FieldMethod, "changeLangAction").
-			WithField(logconst.FieldCalledObject, "UserService").
-			WithField(logconst.FieldCalledMethod, "ChangeLanguage").
-			Error(err)
+		log.Error("failed to change the language",
+			logconst.FieldHandler, "LanguageHandler",
+			logconst.FieldMethod, "changeLangAction",
+			logconst.FieldCalledObject, "UserService",
+			logconst.FieldCalledMethod, "ChangeLanguage",
+			logconst.FieldError, err)
 		reply(failure)
 	} else {
 		reply(success)

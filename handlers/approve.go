@@ -10,7 +10,6 @@ import (
 	"github.com/kozalosev/goSadTgBot/logconst"
 	"github.com/kozalosev/goSadTgBot/storage"
 	"github.com/loctools/go-l10n/loc"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"strconv"
 	"strings"
@@ -28,14 +27,15 @@ const (
 var (
 	requiredApprovals int
 	channelID         = parseNotUserID("CHANNEL_ID")
+
+	approveHandlerLogger = logconst.NewLoggerForHandler("ApproveCallbackHandler")
 )
 
 func init() {
 	if reqApprovals, err := strconv.Atoi(os.Getenv("REQUIRED_APPROVALS")); err == nil {
 		requiredApprovals = reqApprovals
 	} else {
-		log.WithField(logconst.FieldConst, "REQUIRED_APPROVALS").
-			Error(err)
+		logconst.FailedToParseEnvironmentVariable("REQUIRED_APPROVALS", err)
 		requiredApprovals = 1
 	}
 }
@@ -83,17 +83,16 @@ func (h *ApproveCallbackHandler) Handle(reqenv *base.RequestEnv, query *tgbotapi
 					if err = h.appEnv.Bot.Request(answer); err == nil {
 						var approvers []string
 						approvers, err = h.approvalService.GetApprovers(dtoMessage)
-						logEntry := log.WithField(logconst.FieldHandler, "ApproveCallbackHandler").
-							WithField(logconst.FieldMethod, "Handle").
-							WithField("approvers", approvers).
-							WithField("required", requiredApprovals)
+						logger := approveHandlerLogger.With(
+							"approvers", approvers,
+							"required", requiredApprovals)
 						if role == dto.Admin || len(approvers) >= requiredApprovals {
-							logEntry.Info("The message is ready to be published!")
+							logger.Info("The message is ready to be published!")
 							if err = h.publish(suggestion, approvers, query.Message, reqenv.Lang); err == nil {
 								err = h.suggestionsService.Publish(dtoMessage)
 							}
 						} else {
-							logEntry.Info("The message is not fully approved yet.")
+							logger.Info("The message is not fully approved yet.")
 						}
 					}
 				}
@@ -105,20 +104,15 @@ func (h *ApproveCallbackHandler) Handle(reqenv *base.RequestEnv, query *tgbotapi
 	if storage.DuplicateConstraintViolation(err) {
 		answer = tgbotapi.NewCallback(query.ID, reqenv.Lang.Tr(approveStatusTrPrefix+duplicate))
 	} else if err != nil {
-		log.WithField(logconst.FieldHandler, "ApproveCallbackHandler").
-			WithField(logconst.FieldMethod, "Handle").
-			Error(err)
+		approveHandlerLogger.Use().Error("Couldn't handle a request",
+			logconst.FieldError, err)
 		answer = tgbotapi.NewCallbackWithAlert(query.ID, reqenv.Lang.Tr(err.Error()))
 	} else {
 		answer = tgbotapi.NewCallback(query.ID, reqenv.Lang.Tr(success))
 	}
 
 	if err := h.appEnv.Bot.Request(answer); err != nil {
-		log.WithField(logconst.FieldHandler, "ApproveCallbackHandler").
-			WithField(logconst.FieldMethod, "Handle").
-			WithField(logconst.FieldCalledObject, "BotAPI").
-			WithField(logconst.FieldCalledMethod, "Request").
-			Error(err)
+		approveHandlerLogger.FailedTelegramApiRequest(err)
 	}
 }
 

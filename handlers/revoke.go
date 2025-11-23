@@ -7,11 +7,12 @@ import (
 	"github.com/kozalosev/PostSuggesterBot/db/repo"
 	"github.com/kozalosev/goSadTgBot/base"
 	"github.com/kozalosev/goSadTgBot/logconst"
-	log "github.com/sirupsen/logrus"
 	"strings"
 )
 
 const revokeStatusPublished = "callbacks.revoke.status.published"
+
+var revokeHandlerLogger = logconst.NewLoggerForHandler("RevokeCallbackHandler")
 
 type RevokeCallbackHandler struct {
 	appEnv *base.ApplicationEnv
@@ -43,11 +44,10 @@ func (h *RevokeCallbackHandler) Handle(reqenv *base.RequestEnv, query *tgbotapi.
 	if attemptToRevokePublished(err) {
 		answer = tgbotapi.NewCallbackWithAlert(query.ID, reqenv.Lang.Tr(revokeStatusPublished))
 	} else if err != nil {
-		log.WithField(logconst.FieldHandler, "RevokeCallbackHandler").
-			WithField(logconst.FieldMethod, "Handler").
-			WithField(logconst.FieldCalledObject, "SuggestionService").
-			WithField(logconst.FieldCalledMethod, "Revoke").
-			Error(err)
+		revokeHandlerLogger.Use().Error("failed to revoke the message",
+			logconst.FieldCalledObject, "SuggestionService",
+			logconst.FieldCalledMethod, "Revoke",
+			logconst.FieldError, err)
 		answer = tgbotapi.NewCallbackWithAlert(query.ID, reqenv.Lang.Tr(failure))
 	} else {
 		answer = tgbotapi.NewEditMessageTextAndMarkup(query.Message.Chat.ID, query.Message.MessageID,
@@ -55,11 +55,7 @@ func (h *RevokeCallbackHandler) Handle(reqenv *base.RequestEnv, query *tgbotapi.
 			tgbotapi.InlineKeyboardMarkup{InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{}})
 	}
 	if err := h.appEnv.Bot.Request(answer); err != nil {
-		log.WithField(logconst.FieldHandler, "RevokeCallbackHandler").
-			WithField(logconst.FieldMethod, "Handler").
-			WithField(logconst.FieldCalledObject, "BotAPI").
-			WithField(logconst.FieldCalledMethod, "Request").
-			Error(err)
+		revokeHandlerLogger.FailedTelegramApiRequest(err)
 	}
 }
 

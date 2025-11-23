@@ -8,12 +8,13 @@ import (
 	"github.com/kozalosev/PostSuggesterBot/db/repo"
 	"github.com/kozalosev/goSadTgBot/base"
 	"github.com/kozalosev/goSadTgBot/logconst"
-	log "github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
 )
 
 const adminOnlyMessageTr = "messages.admin.only"
+
+var banHandlerLogger = logconst.NewLoggerForHandler("BanCallbackHandler")
 
 type BanCallbackHandler struct {
 	appEnv *base.ApplicationEnv
@@ -71,11 +72,7 @@ func (h *BanCallbackHandler) Handle(reqenv *base.RequestEnv, query *tgbotapi.Cal
 	}
 
 	if err := h.appEnv.Bot.Request(answer); err != nil {
-		log.WithField(logconst.FieldHandler, "BanCallbackHandler").
-			WithField(logconst.FieldMethod, "Handle").
-			WithField(logconst.FieldCalledObject, "BotAPI").
-			WithField(logconst.FieldCalledMethod, "Request").
-			Error(err)
+		banHandlerLogger.FailedTelegramApiRequest(err)
 	}
 }
 
@@ -83,11 +80,7 @@ func (h *BanCallbackHandler) ensureUserIsAdmin(query *tgbotapi.CallbackQuery, re
 	if reqenv.Options.(*dto.UserOptions).Role != dto.Admin {
 		rejection := tgbotapi.NewCallbackWithAlert(query.ID, reqenv.Lang.Tr(adminOnlyMessageTr))
 		if err := h.appEnv.Bot.Request(rejection); err != nil {
-			log.WithField(logconst.FieldHandler, "BanCallbackHandler").
-				WithField(logconst.FieldMethod, "Handle").
-				WithField(logconst.FieldCalledObject, "BotAPI").
-				WithField(logconst.FieldCalledMethod, "Request").
-				Error(err)
+			banHandlerLogger.FailedTelegramApiRequest(err)
 		}
 		return false
 	}

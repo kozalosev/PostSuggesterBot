@@ -6,13 +6,16 @@ import (
 	"github.com/kozalosev/goSadTgBot/base"
 	"github.com/kozalosev/goSadTgBot/logconst"
 	"github.com/kozalosev/goSadTgBot/settings"
-	log "github.com/sirupsen/logrus"
 	"github.com/thoas/go-funk"
 	"strconv"
 	"strings"
 )
 
-var NoRowsWereAffected = errors.New("no rows were affected")
+var (
+	NoRowsWereAffected = errors.New("no rows were affected")
+
+	userServiceLogger = logconst.NewLoggerForDatabaseService("UserService")
+)
 
 // UserService is a repository for the Users table.
 type UserService struct {
@@ -33,11 +36,7 @@ func (service *UserService) FetchUserOptions(uid int64, defaultLang string) (set
 		"SELECT language, banned, role FROM Users WHERE uid = $1", uid).
 		Scan(&language, &opts.Banned, &opts.Role); err != nil {
 
-		log.WithField(logconst.FieldService, "UserService").
-			WithField(logconst.FieldMethod, "FetchUserOptions").
-			WithField(logconst.FieldCalledObject, "Row").
-			WithField(logconst.FieldCalledMethod, "Scan").
-			Error(err)
+		userServiceLogger.FailedToScanDatabaseRow("FetchUserOptions", err)
 	}
 	if language == nil {
 		language = &defaultLang
@@ -67,11 +66,7 @@ func (service *UserService) GetThemAll(uids []int64) ([]*dto.User, error) {
 			if err = res.Scan(&user.UID, &user.Name, &user.Banned, &user.Role); err == nil {
 				users = append(users, &user)
 			} else {
-				log.WithField(logconst.FieldService, "UserService").
-					WithField(logconst.FieldMethod, "GetThemAll").
-					WithField(logconst.FieldCalledObject, "Rows").
-					WithField(logconst.FieldCalledMethod, "Scan").
-					Error(err)
+				userServiceLogger.FailedToScanDatabaseRow("GetThemAll", err)
 			}
 		}
 		return users, nil
