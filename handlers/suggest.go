@@ -104,7 +104,7 @@ func (h *SuggestHandler) formAction(reqenv *base.RequestEnv, msg *tgbotapi.Messa
 	reply := base.NewReplier(h.appEnv, reqenv, msg)
 	if !confirmation {
 		if err := h.stateStorage.DeleteState(msg.From.ID); err != nil {
-			log.Error("unable to delete the state",
+			log.Error("Failed to delete the state",
 				logconst.FieldHandler, "SuggestHandler",
 				logconst.FieldMethod, "formAction",
 				logconst.FieldCalledObject, "StateStorage",
@@ -151,7 +151,7 @@ func (h *SuggestHandler) replyWithApprovalButtons(c tgbotapi.Chattable, authorUI
 			{Text: lc.Tr(ban), CallbackData: &banCallbackData},
 		})
 	} else {
-		log.Error("failed to forward a message",
+		log.Error("Failed to forward a message",
 			logconst.FieldHandler, "SuggestHandler",
 			logconst.FieldMethod, "replyWithApprovalButtons",
 			logconst.FieldCalledObject, "BotAPI",

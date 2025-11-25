@@ -23,7 +23,7 @@ func (f *NotPrivateChatFallbackHandler) CanHandle(_ *base.RequestEnv, msg *tgbot
 
 func (f *NotPrivateChatFallbackHandler) Handle(_ *base.RequestEnv, msg *tgbotapi.Message) {
 	if err := f.stateStorage.DeleteState(msg.From.ID); err != nil {
-		log.Error("unable to delete the state",
+		log.Error("Failed to delete the state",
 			logconst.FieldHandler, "NotPrivateChatFallbackHandler",
 			logconst.FieldMethod, "Handle",
 			logconst.FieldCalledObject, "StateStorage",

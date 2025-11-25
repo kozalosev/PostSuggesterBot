@@ -126,14 +126,14 @@ func (h *PromoteHandler) formAction(reqenv *base.RequestEnv, msg *tgbotapi.Messa
 		return e != nil
 	}).([]error)
 	for _, e := range errs {
-		logger.Error("unable to promote the user",
+		logger.Error("Failed to promote the user",
 			logconst.FieldCalledObject, "UserService",
 			logconst.FieldCalledMethod, "Promote",
 			logconst.FieldError, e)
 	}
 
 	if err := h.stateStorage.DeleteState(msg.From.ID); err != nil {
-		logger.Error("unable to delete the state",
+		logger.Error("Failed to delete the state",
 			logconst.FieldCalledObject, "StateStorage",
 			logconst.FieldCalledMethod, "DeleteState",
 			logconst.FieldError, err)
@@ -165,7 +165,7 @@ func (h *PromoteHandler) resolveCandidates(uid float64, username string, autoAdm
 			users = admins
 		} else {
 			promoteHandlerLogger.ForMethod("resolveCandidates").
-				Error("unable to fetch UIDs of the chat administrators",
+				Error("Failed to fetch UIDs of the chat administrators",
 					logconst.FieldCalledMethod, "fetchAdmins",
 					logconst.FieldError, err)
 			return nil
@@ -176,7 +176,7 @@ func (h *PromoteHandler) resolveCandidates(uid float64, username string, autoAdm
 		return info
 	} else {
 		promoteHandlerLogger.ForMethod("resolveCandidates").
-			Error("unable to fetch candidates info",
+			Error("Failed to fetch candidates info",
 				logconst.FieldCalledMethod, "fetchUsersInfo",
 				logconst.FieldError, err)
 		return nil
@@ -220,7 +220,7 @@ func (h *PromoteHandler) fetchAdminsForChat(chatID int64) <-chan *tgbotapi.User 
 			}
 		} else {
 			promoteHandlerLogger.ForMethod("fetchAdminsForChat").
-				Error("unable to get the list of administrators",
+				Error("Failed to get the list of administrators",
 					logconst.FieldCalledObject, "BotAPI",
 					logconst.FieldCalledMethod, "GetChatAdministrators",
 					logconst.FieldError, err)

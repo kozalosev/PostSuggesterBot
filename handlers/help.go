@@ -83,7 +83,7 @@ func (h *HelpHandler) Handle(reqenv *base.RequestEnv, msg *tgbotapi.Message) {
 		langForm.ProcessNextField(reqenv, msg)
 	} else {
 		if err != repo.NoRowsWereAffected {
-			log.Error("failed to create a new user",
+			log.Error("Failed to create a new user",
 				logconst.FieldHandler, "HelpHandler",
 				logconst.FieldMethod, "Handle",
 				logconst.FieldCalledObject, "UserService",

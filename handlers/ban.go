@@ -72,7 +72,7 @@ func (h *BanCallbackHandler) Handle(reqenv *base.RequestEnv, query *tgbotapi.Cal
 	}
 
 	if err := h.appEnv.Bot.Request(answer); err != nil {
-		banHandlerLogger.FailedTelegramApiRequest(err)
+		banHandlerLogger.LogFailedTelegramApiRequest(err)
 	}
 }
 
@@ -80,7 +80,7 @@ func (h *BanCallbackHandler) ensureUserIsAdmin(query *tgbotapi.CallbackQuery, re
 	if reqenv.Options.(*dto.UserOptions).Role != dto.Admin {
 		rejection := tgbotapi.NewCallbackWithAlert(query.ID, reqenv.Lang.Tr(adminOnlyMessageTr))
 		if err := h.appEnv.Bot.Request(rejection); err != nil {
-			banHandlerLogger.FailedTelegramApiRequest(err)
+			banHandlerLogger.LogFailedTelegramApiRequest(err)
 		}
 		return false
 	}

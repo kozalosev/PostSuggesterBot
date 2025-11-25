@@ -32,7 +32,7 @@ func (service *ApprovalService) GetApprovers(msg *dto.Message) ([]string, error)
 		if err = rows.Scan(&approver); err == nil {
 			approvers = append(approvers, approver)
 		} else {
-			logconst.FailedToScanDatabaseRow("ApprovalService", "GetApprovers", err)
+			logconst.LogFailToScanDatabaseRow("ApprovalService", "GetApprovers", err)
 		}
 	}
 	return approvers, err

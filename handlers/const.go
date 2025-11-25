@@ -23,7 +23,7 @@ func parseNotUserID(idEnv string) int64 {
 
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		logconst.FailedToParseEnvironmentVariableWithContext(
+		logconst.LogFailToParseEnvironmentVariableWithContext(
 			log.With(logconst.FieldFunc, "parseNotUserID"),
 			idEnv, err)
 	}

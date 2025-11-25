@@ -81,7 +81,7 @@ func (h *LanguageHandler) changeLangAction(reqenv *base.RequestEnv, msg *tgbotap
 
 	err := h.userService.ChangeLanguage(msg.From.ID, settings.LangCode(langCode))
 	if err != nil {
-		log.Error("failed to change the language",
+		log.Error("Failed to change the language",
 			logconst.FieldHandler, "LanguageHandler",
 			logconst.FieldMethod, "changeLangAction",
 			logconst.FieldCalledObject, "UserService",

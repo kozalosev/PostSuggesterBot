@@ -156,7 +156,7 @@ func initHandlers(appEnv *base.ApplicationEnv, stateStorage wizard.StateStorage)
 func shutdown(stateStorage wizard.StateStorage, db *pgxpool.Pool) {
 	db.Close()
 	if err := stateStorage.Close(); err != nil {
-		log.Error("attempt to close the state storage failed",
+		log.Error("Failed to close the state storage",
 			logconst.FieldFunc, "shutdown",
 			logconst.FieldCalledObject, "StateStorage",
 			logconst.FieldCalledMethod, "Close",

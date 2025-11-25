@@ -35,7 +35,7 @@ func init() {
 	if reqApprovals, err := strconv.Atoi(os.Getenv("REQUIRED_APPROVALS")); err == nil {
 		requiredApprovals = reqApprovals
 	} else {
-		logconst.FailedToParseEnvironmentVariable("REQUIRED_APPROVALS", err)
+		logconst.LogFailToParseEnvironmentVariable("REQUIRED_APPROVALS", err)
 		requiredApprovals = 1
 	}
 }
@@ -104,7 +104,7 @@ func (h *ApproveCallbackHandler) Handle(reqenv *base.RequestEnv, query *tgbotapi
 	if storage.DuplicateConstraintViolation(err) {
 		answer = tgbotapi.NewCallback(query.ID, reqenv.Lang.Tr(approveStatusTrPrefix+duplicate))
 	} else if err != nil {
-		approveHandlerLogger.Use().Error("Couldn't handle a request",
+		approveHandlerLogger.Use().Error("Failed to handle a request",
 			logconst.FieldError, err)
 		answer = tgbotapi.NewCallbackWithAlert(query.ID, reqenv.Lang.Tr(err.Error()))
 	} else {
@@ -112,7 +112,7 @@ func (h *ApproveCallbackHandler) Handle(reqenv *base.RequestEnv, query *tgbotapi
 	}
 
 	if err := h.appEnv.Bot.Request(answer); err != nil {
-		approveHandlerLogger.FailedTelegramApiRequest(err)
+		approveHandlerLogger.LogFailedTelegramApiRequest(err)
 	}
 }
 

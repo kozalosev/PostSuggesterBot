@@ -13,7 +13,7 @@ func buildNameUpdater(handlerName string, userService *repo.UserService) nameUpd
 	return func(user *tgbotapi.User) {
 		newName := resolveName(user)
 		if err := userService.UpdateName(user.ID, newName); err != nil {
-			log.Error("unable to update the name",
+			log.Error("Failed to update the username",
 				logconst.FieldHandler, handlerName,
 				logconst.FieldMethod, "Handle",
 				logconst.FieldCalledObject, "UserService",

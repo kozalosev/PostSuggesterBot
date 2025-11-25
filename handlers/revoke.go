@@ -44,7 +44,7 @@ func (h *RevokeCallbackHandler) Handle(reqenv *base.RequestEnv, query *tgbotapi.
 	if attemptToRevokePublished(err) {
 		answer = tgbotapi.NewCallbackWithAlert(query.ID, reqenv.Lang.Tr(revokeStatusPublished))
 	} else if err != nil {
-		revokeHandlerLogger.Use().Error("failed to revoke the message",
+		revokeHandlerLogger.Use().Error("Failed to revoke the message",
 			logconst.FieldCalledObject, "SuggestionService",
 			logconst.FieldCalledMethod, "Revoke",
 			logconst.FieldError, err)
@@ -55,7 +55,7 @@ func (h *RevokeCallbackHandler) Handle(reqenv *base.RequestEnv, query *tgbotapi.
 			tgbotapi.InlineKeyboardMarkup{InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{}})
 	}
 	if err := h.appEnv.Bot.Request(answer); err != nil {
-		revokeHandlerLogger.FailedTelegramApiRequest(err)
+		revokeHandlerLogger.LogFailedTelegramApiRequest(err)
 	}
 }
 

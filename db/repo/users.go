@@ -36,7 +36,7 @@ func (service *UserService) FetchUserOptions(uid int64, defaultLang string) (set
 		"SELECT language, banned, role FROM Users WHERE uid = $1", uid).
 		Scan(&language, &opts.Banned, &opts.Role); err != nil {
 
-		userServiceLogger.FailedToScanDatabaseRow("FetchUserOptions", err)
+		userServiceLogger.LogFailToScanDatabaseRow("FetchUserOptions", err)
 	}
 	if language == nil {
 		language = &defaultLang
@@ -66,7 +66,7 @@ func (service *UserService) GetThemAll(uids []int64) ([]*dto.User, error) {
 			if err = res.Scan(&user.UID, &user.Name, &user.Banned, &user.Role); err == nil {
 				users = append(users, &user)
 			} else {
-				userServiceLogger.FailedToScanDatabaseRow("GetThemAll", err)
+				userServiceLogger.LogFailToScanDatabaseRow("GetThemAll", err)
 			}
 		}
 		return users, nil
